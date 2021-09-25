@@ -59,7 +59,7 @@ class TargetYaml(Target):
         ),
         th.Property(
             "stream_maps",
-            th.ObjectType,
+            th.ObjectType(),
             description=(
                 "Allows inline stream transformations and aliasing. "
                 "For more information see: "
