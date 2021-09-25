@@ -1,6 +1,8 @@
 """Yaml target sink class, which handles writing streams."""
 
 import datetime
+import sys
+
 from functools import cached_property
 from pathlib import Path
 from typing import Dict, List
@@ -17,11 +19,11 @@ yaml = YAML()
 class YamlSink(BatchSink):
     """Yaml target sink class."""
 
-    max_size = None  # We want all records in one batch
+    max_size = sys.maxsize  # We want all records in one batch
 
     @cached_property
     def parent_jsonpath_expr(self) -> str:
-        return self.tap_config["jsonpath_insertion_parent"]
+        return self.config["record_insert_jsonpath"]
 
     @cached_property
     def timestamp_time(self) -> datetime.datetime:
@@ -32,10 +34,10 @@ class YamlSink(BatchSink):
         return {
             "stream_name": self.stream_name,
             "datestamp": self.timestamp_time.strftime(
-                self.tap_config[self.datestamp_format]
+                self.config["datestamp_format"]
             ),
             "timestamp": self.timestamp_time.strftime(
-                self.tap_config[self.timestamp_format]
+                self.config["timestamp_format"]
             ),
         }
 
@@ -74,7 +76,7 @@ class YamlSink(BatchSink):
             new_contents = yaml.load_all(output_file.read_text())
 
         parent_node: List[dict] = self._get_insertion_parent_node(new_contents)
-        if self.tap_config["overwrite_behavior"] == "replace_records":
+        if self.config["overwrite_behavior"] == "replace_records":
             parent_node.clear()
 
         parent_node.extend(context["records"])
