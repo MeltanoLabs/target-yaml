@@ -1,7 +1,8 @@
 """Yaml target sink class, which handles writing streams."""
 
 import datetime
-import sys
+import pytz
+import sys, os
 
 from functools import cached_property
 from pathlib import Path
@@ -27,18 +28,16 @@ class YamlSink(BatchSink):
 
     @cached_property
     def timestamp_time(self) -> datetime.datetime:
-        return datetime.datetime.now(tz=self.config["timestamp_tz_offset"])
+        return datetime.datetime.now(
+            tz=pytz.timezone(self.config["timestamp_timezone"])
+        )
 
     @property
     def filepath_replacement_map(self) -> Dict[str, str]:
         return {
             "stream_name": self.stream_name,
-            "datestamp": self.timestamp_time.strftime(
-                self.config["datestamp_format"]
-            ),
-            "timestamp": self.timestamp_time.strftime(
-                self.config["timestamp_format"]
-            ),
+            "datestamp": self.timestamp_time.strftime(self.config["datestamp_format"]),
+            "timestamp": self.timestamp_time.strftime(self.config["timestamp_format"]),
         }
 
     def _json_path_search(self, json: dict, expr: str, singular: bool = True):
@@ -49,14 +48,17 @@ class YamlSink(BatchSink):
 
         return matches
 
-    def _get_insertion_parent_node(self, doc_dict: dict) -> List[dict]:
+    def _get_insertion_point_node(self, doc_dict: dict) -> List[dict]:
+        """TODO: currently gives top-level `metrics` list node."""
+        # return doc_dict["metrics"]
+
         parent_node = self._json_path_search(
             json=doc_dict, expr=self.parent_jsonpath_expr
         )
         if not isinstance(parent_node, jsonpath.DatumInContext):
             raise Exception("Nothing found by the given json-path")
 
-        return parent_node
+        return parent_node.context.value
 
     @property
     def destination_path(self) -> Path:
@@ -66,19 +68,33 @@ class YamlSink(BatchSink):
             if replacement_pattern in result:
                 result = result.replace(replacement_pattern, val)
 
-        return result
+        return Path(result)
 
     def process_batch(self, context: dict) -> None:
         """Write out any prepped records and return once fully written."""
         output_file: Path = self.destination_path
-        new_contents: dict = {}
-        if output_file.exists():
+        self.logger.info(f"Writing to destination file '{output_file.resolve()}'...")
+        new_contents: dict
+        if False and output_file.exists():
             new_contents = yaml.load_all(output_file.read_text())
+        else:
+            new_contents = yaml.load(
+                self.config.get("default_yaml_template", "metrics: []")
+            )
 
-        parent_node: List[dict] = self._get_insertion_parent_node(new_contents)
+        if "metrics" not in new_contents:
+            new_contents["metrics"] = []
+        parent_node = new_contents["metrics"]
+
+        # parent_node: List[dict] = self._get_insertion_point_node(doc_dict=new_contents)
         if self.config["overwrite_behavior"] == "replace_records":
             parent_node.clear()
 
-        parent_node.extend(context["records"])
+        if not isinstance(context["records"], list):
+            raise ValueError(f"No values in records collection: {context['records']}")
 
-        output_file.write_text(str(yaml.dump(new_contents)), encoding="utf-8")
+        self.logger.info(f"Writing {len(context['records'])} records to file...")
+        parent_node.extend(context["records"])
+        print(new_contents)
+        with open(output_file, "w", encoding="utf-8") as fp:
+            yaml.dump(new_contents, stream=fp)

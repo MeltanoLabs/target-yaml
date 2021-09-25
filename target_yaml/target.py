@@ -33,6 +33,7 @@ class TargetYaml(Target):
                 "https://docs.python.org/3/library/datetime.html"
                 "#strftime-and-strptime-format-codes"
             ),
+            default="%Y-%m-%d",
         ),
         th.Property(
             "timestamp_format",
@@ -43,16 +44,18 @@ class TargetYaml(Target):
                 "https://docs.python.org/3/library/datetime.html"
                 "#strftime-and-strptime-format-codes"
             ),
+            default="%Y-%m-%d.T%H%M%S",
         ),
         th.Property(
-            "timestamp_tz_offset",
-            th.NumberType,
+            "timestamp_timezone",
+            th.StringType,
             description=(
-                "The timezone offset to use when generating "
+                "The timezone code or name to use when generating "
                 "`{timestamp}` and `{datestamp}`. "
-                "Defaults to 0 (UTC)."
+                "Defaults to 'UTC'. For a list of possible values, please see: "
+                "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
             ),
-            default=0,
+            default="UTC",
         ),
         th.Property(
             "stream_maps",
@@ -63,6 +66,7 @@ class TargetYaml(Target):
                 "https://sdk.meltano.com/en/latest/stream_maps.html"
             ),
         ),
+        # TODO: Currently will create all entries at the file root
         th.Property(
             "record_insert_jsonpath",
             th.StringType,
@@ -70,7 +74,7 @@ class TargetYaml(Target):
                 "A jsonpath string determining the insertion point for new records. "
                 "For JSONPath syntax help, see: https://jsonpath.com"
             ),
-            default=".*",
+            default="$",
         ),
         th.Property(
             "overwrite_behavior",
