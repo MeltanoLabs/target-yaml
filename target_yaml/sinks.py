@@ -6,7 +6,7 @@ import sys, os
 
 from functools import cached_property
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List, Union
 
 from jsonpath_ng import jsonpath, parse
 from ruamel.yaml import YAML
@@ -56,7 +56,9 @@ class YamlSink(BatchSink):
 
         return matches
 
-    def _get_insertion_point_node(self, doc_dict: dict) -> List[dict]:
+    def _get_insertion_point_node(
+        self, doc_dict: dict
+    ) -> Union[List[dict], Dict[str, dict]]:
         parent_node = self._json_path_search(
             json=doc_dict, expr=self.parent_jsonpath_expr
         )
@@ -102,13 +104,40 @@ class YamlSink(BatchSink):
             new_contents = yaml.load(self.config["default_yaml_template"])
 
         parent_node: List[dict] = self._get_insertion_point_node(doc_dict=new_contents)
-        if self.config["overwrite_behavior"] == "replace_records":
-            parent_node.clear()
 
         if not isinstance(context["records"], list):
-            raise ValueError(f"No values in records collection: {context['records']}")
+            raise ValueError(f"No values in records collection.")
 
-        self.logger.info(f"Writing {len(context['records'])} records to file...")
-        parent_node.extend(context["records"])
+        records: List[Dict[str, Any]] = context["records"]
+        if "record_sort_property_name" in self.config:
+            sort_property_name = self.config["record_sort_property_name"]
+            records = sorted(records, key=lambda x: x[sort_property_name])
+
+        if "record_key_property_name" in self.config:
+            self.logger.info(
+                "`record_key_property_name` setting exists. Writing as dict."
+            )
+            assert isinstance(
+                parent_node, dict
+            ), f"Expected 'dict', found {parent_node}"
+            if self.config["overwrite_behavior"] == "replace_records":
+                parent_node.clear()
+
+            key_property_name = self.config["record_key_property_name"]
+            for record in records:
+                record_key = record.pop(key_property_name)
+                parent_node[record_key] = record
+
+        else:
+            self.logger.info(
+                "`record_key_property_name` setting does not exist. Writing as list."
+            )
+            assert isinstance(parent_node, list)
+            if self.config["overwrite_behavior"] == "replace_records":
+                parent_node.clear()
+
+            self.logger.info(f"Writing {len(context['records'])} records to file...")
+            parent_node.extend(context["records"])
+
         with open(output_file, "w", encoding="utf-8") as fp:
             yaml.dump(new_contents, stream=fp)

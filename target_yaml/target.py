@@ -81,6 +81,23 @@ class TargetYaml(Target):
             default="$.metrics",
         ),
         th.Property(
+            "record_key_property_name",
+            th.StringType,
+            description=(
+                "A property in the record which will be used as the dictionary key.\n\n"
+                "If this property is provided, records will be written as key-value "
+                "objects; if omitted, records are written as a list."
+            ),
+        ),
+        th.Property(
+            "record_sort_property_name",
+            th.StringType,
+            description=(
+                "A property in the record which will be used as a sort key.\n\n"
+                "If this property is omitted, records will not be sorted."
+            ),
+        ),
+        th.Property(
             "overwrite_behavior",
             th.StringType,
             description=(
