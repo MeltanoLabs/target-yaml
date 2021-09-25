@@ -49,5 +49,35 @@ class TargetYaml(Target):
                 "https://sdk.meltano.com/en/latest/stream_maps.html"
             ),
         ),
+        th.Property(
+            "record_insert_jsonpath",
+            th.StringType,
+            description=(
+                "A jsonpath string determining the insertion point for new records. "
+                "For JSONPath syntax help, see: https://jsonpath.com"
+            ),
+            default=".*",
+        ),
+        th.Property(
+            "overwrite_behavior",
+            th.StringType,
+            description=(
+                "Determines the overwrite behavior if destination file already exists. "
+                "Must be one of the following string values: \n\n"
+                "- `append_records` (default) - append records at the insertion point\n"
+                "- `replace_records` - replace all records at the insertion point\n"
+                "- `replace_file` - replace entire file using `default_yaml_template`\n"
+            ),
+            default="append_records",
+        ),
+        th.Property(
+            "default_yaml_template",
+            th.StringType,
+            description=(
+                "Text string to use for a yaml template file. "
+                "This text will be used to create a new file if the destination "
+                "file does not exist."
+            ),
+        ),
     ).to_dict()
     default_sink_class = YamlSink
