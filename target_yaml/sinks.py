@@ -63,11 +63,12 @@ class YamlSink(BatchSink):
         if not isinstance(parent_node, jsonpath.DatumInContext):
             raise Exception("Nothing found by the given json-path")
 
-        self.logger.info(
-            f"Found parent_node '{parent_node}' with "
-            f"context '{parent_node.context}' with "
-            f"context value '{parent_node.context.value}'"
-        )
+        # With large files this can cause the system to crash:
+        # self.logger.info(
+        #     f"Found parent_node '{parent_node}' with "
+        #     f"context '{parent_node.context}' with "
+        #     f"context value '{parent_node.context.value}'"
+        # )
         return parent_node.value
 
     @property
