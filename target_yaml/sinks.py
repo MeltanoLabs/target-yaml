@@ -43,22 +43,32 @@ class YamlSink(BatchSink):
     def _json_path_search(self, json: dict, expr: str, singular: bool = True):
         path = parse(expr)
         matches = path.find(json)
+
+        if len(matches) == 0:
+            raise ValueError(
+                f"Could not find jsonpath '{expr}' in JSON document body. "
+                "Please verify the file path, `record_insert_jsonpath`, "
+                f"and `default_yaml_template`. Body was: {repr(json)[0:1000]}"
+            )
+
         if singular:
             return matches[0]
 
         return matches
 
     def _get_insertion_point_node(self, doc_dict: dict) -> List[dict]:
-        """TODO: currently gives top-level `metrics` list node."""
-        # return doc_dict["metrics"]
-
         parent_node = self._json_path_search(
             json=doc_dict, expr=self.parent_jsonpath_expr
         )
         if not isinstance(parent_node, jsonpath.DatumInContext):
             raise Exception("Nothing found by the given json-path")
 
-        return parent_node.context.value
+        self.logger.info(
+            f"Found parent_node '{parent_node}' with "
+            f"context '{parent_node.context}' with "
+            f"context value '{parent_node.context.value}'"
+        )
+        return parent_node.value
 
     @property
     def destination_path(self) -> Path:
@@ -75,18 +85,22 @@ class YamlSink(BatchSink):
         output_file: Path = self.destination_path
         self.logger.info(f"Writing to destination file '{output_file.resolve()}'...")
         new_contents: dict
-        if False and output_file.exists():
-            new_contents = yaml.load_all(output_file.read_text())
-        else:
-            new_contents = yaml.load(
-                self.config.get("default_yaml_template", "metrics: []")
+        create_new = (
+            self.config["overwrite_behavior"] == "replace_file"
+            or not output_file.exists()
+        )
+        if not create_new:
+            new_contents = yaml.load(output_file.read_text())
+        elif "default_yaml_template" not in self.config:
+            raise ValueError(
+                "Config value `default_yaml_template` is required because either the "
+                "file does not exist or `overwrite_behavior` = 'replace_file'."
             )
 
-        if "metrics" not in new_contents:
-            new_contents["metrics"] = []
-        parent_node = new_contents["metrics"]
+        else:
+            new_contents = yaml.load(self.config["default_yaml_template"])
 
-        # parent_node: List[dict] = self._get_insertion_point_node(doc_dict=new_contents)
+        parent_node: List[dict] = self._get_insertion_point_node(doc_dict=new_contents)
         if self.config["overwrite_behavior"] == "replace_records":
             parent_node.clear()
 
@@ -95,6 +109,5 @@ class YamlSink(BatchSink):
 
         self.logger.info(f"Writing {len(context['records'])} records to file...")
         parent_node.extend(context["records"])
-        print(new_contents)
         with open(output_file, "w", encoding="utf-8") as fp:
             yaml.dump(new_contents, stream=fp)

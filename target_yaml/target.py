@@ -72,9 +72,13 @@ class TargetYaml(Target):
             th.StringType,
             description=(
                 "A jsonpath string determining the insertion point for new records. "
+                "Currently, this must be the path to a map key which will be "
+                "populated by a list of records. \n\n"
+                "For example '$.metrics' will populate the file with "
+                "`metrics: [{<record1>},{<record2>},...]` \n\n"
                 "For JSONPath syntax help, see: https://jsonpath.com"
             ),
-            default="$",
+            default="$.metrics",
         ),
         th.Property(
             "overwrite_behavior",
@@ -86,7 +90,7 @@ class TargetYaml(Target):
                 "- `replace_records` - replace all records at the insertion point\n"
                 "- `replace_file` - replace entire file using `default_yaml_template`\n"
             ),
-            default="append_records",
+            default="replace_records",
         ),
         th.Property(
             "default_yaml_template",
