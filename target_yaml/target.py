@@ -9,7 +9,7 @@ from target_yaml.sinks import (
 
 
 class TargetYaml(Target):
-    """Sample target for Yaml."""
+    """A Singer target that generates YAML files."""
 
     name = "target-yaml"
     config_jsonschema = th.PropertiesList(
@@ -38,6 +38,15 @@ class TargetYaml(Target):
             description=(
                 "A format string to use when outputting the `{timestamp}` string. "
                 "See [TODO: tbd] for reference."
+            ),
+        ),
+        th.Property(
+            "stream_maps",
+            th.StringType,
+            description=(
+                "Allows inline stream transformations and aliasing. "
+                "For more information see: "
+                "https://sdk.meltano.com/en/latest/stream_maps.html"
             ),
         ),
     ).to_dict()
