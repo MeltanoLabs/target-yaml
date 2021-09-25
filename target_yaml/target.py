@@ -28,17 +28,31 @@ class TargetYaml(Target):
             "datestamp_format",
             th.StringType,
             description=(
-                "A format string to use when outputting the `{datestamp}` string. "
-                "See [TODO: tbd] for reference."
+                "A python format string to use when outputting the `{datestamp}` "
+                "string. For reference, see: "
+                "https://docs.python.org/3/library/datetime.html"
+                "#strftime-and-strptime-format-codes"
             ),
         ),
         th.Property(
             "timestamp_format",
             th.StringType,
             description=(
-                "A format string to use when outputting the `{timestamp}` string. "
-                "See [TODO: tbd] for reference."
+                "A python format string to use when outputting the `{timestamp}` "
+                "string. For reference, see: "
+                "https://docs.python.org/3/library/datetime.html"
+                "#strftime-and-strptime-format-codes"
             ),
+        ),
+        th.Property(
+            "timestamp_tz_offset",
+            th.NumberType,
+            description=(
+                "The timezone offset to use when generating "
+                "`{timestamp}` and `{datestamp}`. "
+                "Defaults to 0 (UTC)."
+            ),
+            default=0,
         ),
         th.Property(
             "stream_maps",
