@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "target-yaml"
+version = "0.0.1"
+description = "`target-yaml` is a Singer target for Yaml, built with the Meltano SDK for Singer Targets."
+authors = ["AJ Steers"]
+license = "Apache 2.0"
+
+[tool.poetry.dependencies]
+python = "<3.9,>=3.6.1"
+requests = "^2.25.1"
+singer-sdk = "^0.3.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.1.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+# CLI declaration
+target-yaml = 'target_yaml.target:TargetYaml.cli'
