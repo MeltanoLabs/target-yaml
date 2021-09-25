@@ -3,7 +3,7 @@
 import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from jsonpath_ng import jsonpath, parse
 from ruamel.yaml import YAML
@@ -28,7 +28,7 @@ class YamlSink(BatchSink):
         return datetime.datetime.now(tz=self.config["timestamp_tz_offset"])
 
     @property
-    def filepath_replacement_map(self) -> dict[str, str]:
+    def filepath_replacement_map(self) -> Dict[str, str]:
         return {
             "stream_name": self.stream_name,
             "datestamp": self.timestamp_time.strftime(
