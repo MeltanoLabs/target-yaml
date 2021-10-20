@@ -23,6 +23,8 @@ target is available by running:
 
 ```bash
 target-yaml --about
+target-yaml --about --format=json
+target-yaml --about --format=markdown
 ```
 
 ### Source Authentication and Authorization
