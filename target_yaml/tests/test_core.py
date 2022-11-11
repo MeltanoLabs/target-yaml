@@ -1,27 +1,22 @@
 """Tests standard target features using the built-in SDK tests library."""
 
-import datetime
-
-from typing import Dict, Any
-
-from singer_sdk.testing import get_standard_target_tests
+from singer_sdk.testing import TargetTestRunner, get_test_class
+from singer_sdk.testing.suites import target_tests
 
 from target_yaml.target import TargetYaml
 
-SAMPLE_CONFIG: Dict[str, Any] = {
-    # TODO: Initialize minimal target config
+DEFAULT_YAML_TEMPLATE = "metrics: {}"
+
+SAMPLE_CONFIG = {
+    "file_naming_scheme": "{stream_name}.yml",
+    "record_insert_jsonpath": "$.metrics",
+    "default_yaml_template": DEFAULT_YAML_TEMPLATE,
+    "record_key_property_name": "id",
+    "max_parallelism": 1,
 }
 
-
-# Run standard built-in target tests from the SDK:
-def test_standard_target_tests():
-    """Run standard target tests from the SDK."""
-    tests = get_standard_target_tests(
-        TargetYaml,
-        config=SAMPLE_CONFIG,
-    )
-    for test in tests:
-        test()
-
-
-# TODO: Create additional tests as appropriate for your target.
+TestTargetYaml = get_test_class(
+    test_runner_class=TargetTestRunner,
+    test_runner_kwargs=dict(target_class=TargetYaml, config=SAMPLE_CONFIG),
+    test_suites=[target_tests],
+)

@@ -1,18 +1,16 @@
 """Yaml target sink class, which handles writing streams."""
 
 import datetime
-import pytz
-import sys, os
-
+import os
+import sys
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
+import pytz
 from jsonpath_ng import jsonpath, parse
 from ruamel.yaml import YAML
-
 from singer_sdk.sinks import BatchSink
-
 
 yaml = YAML()
 
