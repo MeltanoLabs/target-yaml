@@ -22,6 +22,3 @@ def test_standard_target_tests():
     )
     for test in tests:
         test()
-
-
-# TODO: Create additional tests as appropriate for your target.
